@@ -4,7 +4,7 @@
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ *
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -16,15 +16,14 @@
  */
 package spark.embeddedserver.jetty;
 
-import java.io.IOException;
-
-import javax.servlet.Filter;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import jakarta.servlet.Filter;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.session.SessionHandler;
+
+import java.io.IOException;
 
 /**
  * Simple Jetty Handler
@@ -41,10 +40,10 @@ public class JettyHandler extends SessionHandler {
 
     @Override
     public void doHandle(
-            String target,
-            Request baseRequest,
-            HttpServletRequest request,
-            HttpServletResponse response) throws IOException, ServletException {
+        String target,
+        Request baseRequest,
+        HttpServletRequest request,
+        HttpServletResponse response) throws IOException, ServletException {
 
         HttpRequestWrapper wrapper = new HttpRequestWrapper(request);
         filter.doFilter(wrapper, response, null);

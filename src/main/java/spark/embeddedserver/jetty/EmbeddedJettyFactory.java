@@ -17,7 +17,6 @@
 package spark.embeddedserver.jetty;
 
 import org.eclipse.jetty.util.thread.ThreadPool;
-
 import spark.ExceptionMapper;
 import spark.embeddedserver.EmbeddedServer;
 import spark.embeddedserver.EmbeddedServerFactory;
@@ -49,7 +48,8 @@ public class EmbeddedJettyFactory implements EmbeddedServerFactory {
         matcherFilter.init(null);
 
         JettyHandler handler = new JettyHandler(matcherFilter);
-        handler.getSessionCookieConfig().setHttpOnly(httpOnly);
+        handler.setHttpOnly(httpOnly);
+//        handler.getSessionCookieConfig().setHttpOnly(httpOnly);
         return new EmbeddedJettyServer(serverFactory, handler).withThreadPool(threadPool);
     }
 

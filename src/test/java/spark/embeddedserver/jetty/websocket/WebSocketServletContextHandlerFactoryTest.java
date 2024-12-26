@@ -8,11 +8,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletContext;
 
 import org.eclipse.jetty.http.pathmap.MappedResource;
 import org.eclipse.jetty.http.pathmap.PathSpec;
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.websocket.server.NativeWebSocketConfiguration;
 import org.eclipse.jetty.websocket.server.WebSocketServerFactory;
 import org.eclipse.jetty.websocket.server.WebSocketUpgradeFilter;

@@ -871,8 +871,8 @@ public class Spark {
      * Unmaps a particular route from the collection of those that have been previously routed.
      * Search for previously established routes using the given path and unmaps any matches that are found.
      *
-     * @param path          the route path
-     * @return              <tt>true</tt> if this is a matching route which has been previously routed
+     * @param path the route path
+     * @return <tt>true</tt> if this is a matching route which has been previously routed
      * @throws IllegalArgumentException if <tt>path</tt> is null or blank
      */
     public static boolean unmap(String path) {
@@ -884,11 +884,11 @@ public class Spark {
      * Search for previously established routes using the given path and HTTP method, unmaps any
      * matches that are found.
      *
-     * @param path          the route path
-     * @param httpMethod    the http method
+     * @param path       the route path
+     * @param httpMethod the http method
      * @return <tt>true</tt> if this is a matching route that has been previously routed
      * @throws IllegalArgumentException if <tt>path</tt> is null or blank or if <tt>httpMethod</tt> is null, blank,
-     * or an invalid HTTP method
+     *                                  or an invalid HTTP method
      */
     public static boolean unmap(String path, String httpMethod) {
         return getInstance().unmap(path, httpMethod);
@@ -1212,42 +1212,16 @@ public class Spark {
     public static void stop() {
         getInstance().stop();
     }
-    
+
     /**
      * Waits for the Spark server to be stopped.
      * If it's already stopped, will return immediately.
      */
     public static void awaitStop() {
-    	getInstance().awaitStop();
+        getInstance().awaitStop();
     }
 
     ////////////////
-    // Websockets //
-
-    /**
-     * Maps the given path to the given WebSocket handler.
-     * <p>
-     * This is currently only available in the embedded server mode.
-     *
-     * @param path    the WebSocket path.
-     * @param handler the handler class that will manage the WebSocket connection to the given path.
-     */
-    public static void webSocket(String path, Class<?> handler) {
-        getInstance().webSocket(path, handler);
-    }
-
-    public static void webSocket(String path, Object handler) {
-        getInstance().webSocket(path, handler);
-    }
-
-    /**
-     * Sets the max idle timeout in milliseconds for WebSocket connections.
-     *
-     * @param timeoutMillis The max idle timeout in milliseconds.
-     */
-    public static void webSocketIdleTimeoutMillis(int timeoutMillis) {
-        getInstance().webSocketIdleTimeoutMillis(timeoutMillis);
-    }
 
     /**
      * Maps 404 Not Found errors to the provided custom page

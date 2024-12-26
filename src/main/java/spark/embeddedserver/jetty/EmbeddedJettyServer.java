@@ -4,7 +4,7 @@
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
- *  
+ *
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -16,27 +16,18 @@
  */
 package spark.embeddedserver.jetty;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.thread.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import spark.embeddedserver.EmbeddedServer;
-import spark.embeddedserver.jetty.websocket.WebSocketHandlerWrapper;
-import spark.embeddedserver.jetty.websocket.WebSocketServletContextHandlerFactory;
 import spark.ssl.SslStores;
+
+import java.io.IOException;
+import java.net.ServerSocket;
 
 /**
  * Spark server implementation
@@ -54,23 +45,11 @@ public class EmbeddedJettyServer implements EmbeddedServer {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private Map<String, WebSocketHandlerWrapper> webSocketHandlers;
-    private Optional<Long> webSocketIdleTimeoutMillis;
-
-    private ThreadPool threadPool = null;
     private boolean trustForwardHeaders = true; // true by default
 
     public EmbeddedJettyServer(JettyServerFactory serverFactory, Handler handler) {
         this.serverFactory = serverFactory;
         this.handler = handler;
-    }
-
-    @Override
-    public void configureWebSockets(Map<String, WebSocketHandlerWrapper> webSocketHandlers,
-                                    Optional<Long> webSocketIdleTimeoutMillis) {
-
-        this.webSocketHandlers = webSocketHandlers;
-        this.webSocketIdleTimeoutMillis = webSocketIdleTimeoutMillis;
     }
 
     @Override
@@ -101,7 +80,7 @@ public class EmbeddedJettyServer implements EmbeddedServer {
         }
 
         // Create instance of jetty server with either default or supplied queued thread pool
-        if(threadPool == null) {
+        if (threadPool == null) {
             server = serverFactory.create(maxThreads, minThreads, threadIdleTimeoutMillis);
         } else {
             server = serverFactory.create(threadPool);
@@ -121,28 +100,12 @@ public class EmbeddedJettyServer implements EmbeddedServer {
             server.setConnectors(previousConnectors);
             hasCustomizedConnectors = true;
         } else {
-            server.setConnectors(new Connector[] {connector});
+            server.setConnectors(new Connector[]{connector});
         }
 
-        ServletContextHandler webSocketServletContextHandler =
-            WebSocketServletContextHandlerFactory.create(webSocketHandlers, webSocketIdleTimeoutMillis);
 
         // Handle web socket routes
-        if (webSocketServletContextHandler == null) {
-            server.setHandler(handler);
-        } else {
-            List<Handler> handlersInList = new ArrayList<>();
-            handlersInList.add(handler);
-
-            // WebSocket handler must be the last one
-            if (webSocketServletContextHandler != null) {
-                handlersInList.add(webSocketServletContextHandler);
-            }
-
-            HandlerList handlers = new HandlerList();
-            handlers.setHandlers(handlersInList.toArray(new Handler[handlersInList.size()]));
-            server.setHandler(handlers);
-        }
+        server.setHandler(handler);
 
         logger.info("== {} has ignited ...", NAME);
         if (hasCustomizedConnectors) {
@@ -191,11 +154,11 @@ public class EmbeddedJettyServer implements EmbeddedServer {
     /**
      * Sets optional thread pool for jetty server.  This is useful for overriding the default thread pool
      * behaviour for example io.dropwizard.metrics.jetty9.InstrumentedQueuedThreadPool.
+     *
      * @param threadPool thread pool
      * @return Builder pattern - returns this instance
      */
     public EmbeddedJettyServer withThreadPool(ThreadPool threadPool) {
-        this.threadPool = threadPool;
         return this;
     }
 }

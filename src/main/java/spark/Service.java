@@ -16,24 +16,10 @@
  */
 package spark;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import spark.embeddedserver.EmbeddedServer;
 import spark.embeddedserver.EmbeddedServers;
-import spark.embeddedserver.jetty.websocket.WebSocketHandlerClassWrapper;
-import spark.embeddedserver.jetty.websocket.WebSocketHandlerInstanceWrapper;
-import spark.embeddedserver.jetty.websocket.WebSocketHandlerWrapper;
 import spark.route.HttpMethod;
 import spark.route.Routes;
 import spark.route.ServletRoutes;
@@ -42,7 +28,11 @@ import spark.ssl.SslStores;
 import spark.staticfiles.MimeType;
 import spark.staticfiles.StaticFilesConfiguration;
 
-import static java.util.Objects.requireNonNull;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import static spark.globalstate.ServletFlag.isRunningFromServlet;
 
 /**
@@ -67,7 +57,6 @@ public final class Service extends Routable {
 
     protected SslStores sslStores;
 
-    protected Map<String, WebSocketHandlerWrapper> webSocketHandlers = null;
 
     protected int maxThreads = -1;
     protected int minThreads = -1;
@@ -291,7 +280,7 @@ public final class Service extends Routable {
 
         if (keystoreFile == null) {
             throw new IllegalArgumentException(
-                    "Must provide a keystore file to run secured");
+                "Must provide a keystore file to run secured");
         }
 
         sslStores = SslStores.create(keystoreFile, keystorePassword, certAlias, truststoreFile, truststorePassword, needsClientCert);
@@ -396,45 +385,6 @@ public final class Service extends Routable {
     }
 
     /**
-     * Maps the given path to the given WebSocket handler class.
-     * <p>
-     * This is currently only available in the embedded server mode.
-     *
-     * @param path         the WebSocket path.
-     * @param handlerClass the handler class that will manage the WebSocket connection to the given path.
-     */
-    public void webSocket(String path, Class<?> handlerClass) {
-        addWebSocketHandler(path, new WebSocketHandlerClassWrapper(handlerClass));
-    }
-
-    /**
-     * Maps the given path to the given WebSocket handler instance.
-     * <p>
-     * This is currently only available in the embedded server mode.
-     *
-     * @param path    the WebSocket path.
-     * @param handler the handler instance that will manage the WebSocket connection to the given path.
-     */
-    public void webSocket(String path, Object handler) {
-        addWebSocketHandler(path, new WebSocketHandlerInstanceWrapper(handler));
-    }
-
-    private synchronized void addWebSocketHandler(String path, WebSocketHandlerWrapper handlerWrapper) {
-        if (initialized) {
-            throwBeforeRouteMappingException();
-        }
-        if (isRunningFromServlet()) {
-            throw new IllegalStateException("WebSockets are only supported in the embedded server");
-        }
-        requireNonNull(path, "WebSocket path cannot be null");
-        if (webSocketHandlers == null) {
-            webSocketHandlers = new HashMap<>();
-        }
-
-        webSocketHandlers.put(path, handlerWrapper);
-    }
-
-    /**
      * Sets the max idle timeout in milliseconds for WebSocket connections.
      *
      * @param timeoutMillis The max idle timeout in milliseconds.
@@ -489,7 +439,7 @@ public final class Service extends Routable {
      */
     public void awaitInitialization() {
         if (!initialized) {
-    	        throw new IllegalStateException("Server has not been properly initialized");
+            throw new IllegalStateException("Server has not been properly initialized");
         }
 
         try {
@@ -502,11 +452,11 @@ public final class Service extends Routable {
 
     private void throwBeforeRouteMappingException() {
         throw new IllegalStateException(
-                "This must be done before route mapping has begun");
+            "This must be done before route mapping has begun");
     }
 
     private boolean hasMultipleHandlers() {
-        return webSocketHandlers != null;
+        return false;
     }
 
 
@@ -514,9 +464,9 @@ public final class Service extends Routable {
      * Stops the Spark server and clears all routes.
      */
     public synchronized void stop() {
-    	if (!initialized) {
-    		return;
-    	}
+        if (!initialized) {
+            return;
+        }
         initiateStop();
     }
 
@@ -534,7 +484,7 @@ public final class Service extends Routable {
     }
 
     private void initiateStop() {
-    	stopLatch = new CountDownLatch(1);
+        stopLatch = new CountDownLatch(1);
         Thread stopThread = new Thread(() -> {
             if (server != null) {
                 server.extinguish();
@@ -574,6 +524,7 @@ public final class Service extends Routable {
     public String getPaths() {
         return pathDeque.stream().collect(Collectors.joining(""));
     }
+
     /**
      * @return all routes information from this service
      */
@@ -614,32 +565,31 @@ public final class Service extends Routable {
 
             if (!isRunningFromServlet()) {
                 new Thread(() -> {
-                  try {
-                    EmbeddedServers.initialize();
+                    try {
+                        EmbeddedServers.initialize();
 
-                    if (embeddedServerIdentifier == null) {
-                        embeddedServerIdentifier = EmbeddedServers.defaultIdentifier();
-                    }
+                        if (embeddedServerIdentifier == null) {
+                            embeddedServerIdentifier = EmbeddedServers.defaultIdentifier();
+                        }
 
-                    server = EmbeddedServers.create(embeddedServerIdentifier,
-                                                    routes,
-                                                    exceptionMapper,
-                                                    staticFilesConfiguration,
-                                                    hasMultipleHandlers());
+                        server = EmbeddedServers.create(embeddedServerIdentifier,
+                            routes,
+                            exceptionMapper,
+                            staticFilesConfiguration,
+                            hasMultipleHandlers());
 
-                    server.configureWebSockets(webSocketHandlers, webSocketIdleTimeoutMillis);
-                    server.trustForwardHeaders(trustForwardHeaders);
+                        server.trustForwardHeaders(trustForwardHeaders);
 
-                    port = server.ignite(
+                        port = server.ignite(
                             ipAddress,
                             port,
                             sslStores,
                             maxThreads,
                             minThreads,
                             threadIdleTimeoutMillis);
-                  } catch (Exception e) {
-                    initExceptionHandler.accept(e);
-                  }
+                    } catch (Exception e) {
+                        initExceptionHandler.accept(e);
+                    }
                     try {
                         initLatch.countDown();
                         server.join();
