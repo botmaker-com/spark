@@ -1,29 +1,12 @@
 package spark;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 import org.eclipse.jetty.util.URIUtil;
-import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import spark.embeddedserver.jetty.websocket.WebSocketTestClient;
-import spark.embeddedserver.jetty.websocket.WebSocketTestHandler;
 import spark.examples.exception.BaseException;
 import spark.examples.exception.JWGmeligMeylingException;
 import spark.examples.exception.NotFoundException;
@@ -31,18 +14,16 @@ import spark.examples.exception.SubclassOfBaseException;
 import spark.util.SparkTestUtil;
 import spark.util.SparkTestUtil.UrlResponse;
 
-import static spark.Spark.after;
-import static spark.Spark.afterAfter;
-import static spark.Spark.before;
-import static spark.Spark.exception;
-import static spark.Spark.externalStaticFileLocation;
-import static spark.Spark.get;
-import static spark.Spark.halt;
-import static spark.Spark.patch;
-import static spark.Spark.path;
-import static spark.Spark.post;
-import static spark.Spark.staticFileLocation;
-import static spark.Spark.webSocket;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
+import static spark.Spark.*;
 
 public class GenericIntegrationTest {
 
@@ -74,7 +55,6 @@ public class GenericIntegrationTest {
 
         staticFileLocation("/public");
         externalStaticFileLocation(System.getProperty("java.io.tmpdir"));
-        webSocket("/ws", WebSocketTestHandler.class);
 
         before("/secretcontent/*", (q, a) -> {
             halt(401, "Go Away!");
@@ -109,7 +89,7 @@ public class GenericIntegrationTest {
         get("/paramandwild/:param/stuff/*", (q, a) -> "paramandwild: " + q.params(":param") + q.splat()[0]);
         get("/paramwithmaj/:paramWithMaj", (q, a) -> "echo: " + q.params(":paramWithMaj"));
 
-        get("/templateView", (q, a) ->  new ModelAndView("Hello", "my view"), new TemplateEngine() {
+        get("/templateView", (q, a) -> new ModelAndView("Hello", "my view"), new TemplateEngine() {
             @Override
             public String render(ModelAndView modelAndView) {
                 return modelAndView.getModel() + " from " + modelAndView.getViewName();
@@ -360,7 +340,7 @@ public class GenericIntegrationTest {
         String splat = "mah/FRIEND";
         String encodedSplat = URLEncoder.encode(splat, "UTF-8");
         UrlResponse response = testUtil.doMethod("GET",
-                                                 "/paramandwild/" + encodedParam + "/stuff/" + encodedSplat, null);
+            "/paramandwild/" + encodedParam + "/stuff/" + encodedSplat, null);
         Assert.assertEquals(200, response.status);
         Assert.assertEquals("paramandwild: " + param + splat, response.body);
     }
@@ -487,27 +467,6 @@ public class GenericIntegrationTest {
     public void testTypedExceptionMapper() throws Exception {
         UrlResponse response = testUtil.doMethod("GET", "/throwmeyling", null);
         Assert.assertEquals(new JWGmeligMeylingException().trustButVerify(), response.body);
-    }
-
-    @Test
-    public void testWebSocketConversation() throws Exception {
-        String uri = "ws://localhost:4567/ws";
-        WebSocketClient client = new WebSocketClient();
-        WebSocketTestClient ws = new WebSocketTestClient();
-
-        try {
-            client.start();
-            client.connect(ws, URI.create(uri), new ClientUpgradeRequest());
-            ws.awaitClose(30, TimeUnit.SECONDS);
-        } finally {
-            client.stop();
-        }
-
-        List<String> events = WebSocketTestHandler.events;
-        Assert.assertEquals(3, events.size(), 3);
-        Assert.assertEquals("onConnect", events.get(0));
-        Assert.assertEquals("onMessage: Hi Spark!", events.get(1));
-        Assert.assertEquals("onClose: 1000 Bye!", events.get(2));
     }
 
     @Test

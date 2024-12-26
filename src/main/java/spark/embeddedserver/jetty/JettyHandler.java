@@ -17,13 +17,12 @@
 package spark.embeddedserver.jetty;
 
 import jakarta.servlet.Filter;
-import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.session.SessionHandler;
-
-import java.io.IOException;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * Simple Jetty Handler
@@ -39,21 +38,31 @@ public class JettyHandler extends SessionHandler {
     }
 
     @Override
-    public void doHandle(
-        String target,
-        Request baseRequest,
-        HttpServletRequest request,
-        HttpServletResponse response) throws IOException, ServletException {
+    public boolean handle(final Request request, final Response response, final Callback callback) throws Exception {
+        final HttpRequestWrapper wrapper = new HttpRequestWrapper((HttpServletRequest) request);
 
-        HttpRequestWrapper wrapper = new HttpRequestWrapper(request);
-        filter.doFilter(wrapper, response, null);
+        filter.doFilter(wrapper, (ServletResponse) response, null);
 
-        if (wrapper.notConsumed()) {
-            baseRequest.setHandled(false);
-        } else {
-            baseRequest.setHandled(true);
-        }
+        return !wrapper.notConsumed();
+
 
     }
 
+//    @Override
+//    public void doHandle(
+//        String target,
+//        Request baseRequest,
+//        HttpServletRequest request,
+//        HttpServletResponse response) throws IOException, ServletException {
+//
+//        HttpRequestWrapper wrapper = new HttpRequestWrapper(request);
+//        filter.doFilter(wrapper, response, null);
+//
+//        if (wrapper.notConsumed()) {
+//            baseRequest.setHandled(false);
+//        } else {
+//            baseRequest.setHandled(true);
+//        }
+//
+//    }
 }

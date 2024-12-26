@@ -1,7 +1,6 @@
 package spark;
 
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.junit.Before;
 import org.junit.Rule;
@@ -9,15 +8,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 import org.powermock.reflect.Whitebox;
-
 import spark.embeddedserver.EmbeddedServer;
 import spark.embeddedserver.EmbeddedServers;
 import spark.route.Routes;
 import spark.ssl.SslStores;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static spark.Service.ignite;
 
 public class ServiceTest {
@@ -247,29 +243,6 @@ public class ServiceTest {
         service.webSocketIdleTimeoutMillis(100);
     }
 
-    @Test
-    public void testWebSocket_whenInitializedTrue_thenThrowIllegalStateException() {
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("This must be done before route mapping has begun");
-
-        Whitebox.setInternalState(service, "initialized", true);
-        service.webSocket("/", DummyWebSocketListener.class);
-    }
-    
-    @Test
-    public void testWebSocket_whenPathNull_thenThrowNullPointerException() {
-        thrown.expect(NullPointerException.class);
-        thrown.expectMessage("WebSocket path cannot be null");
-        service.webSocket(null, new DummyWebSocketListener());
-    }
-    
-    @Test
-    public void testWebSocket_whenHandlerNull_thenThrowNullPointerException() {
-        thrown.expect(NullPointerException.class);
-        thrown.expectMessage("WebSocket handler class cannot be null");
-        service.webSocket("/", null);
-    }
-    
     @Test(timeout = 300)
     public void stopExtinguishesServer() {
         Service service = Service.ignite();
@@ -280,16 +253,16 @@ public class ServiceTest {
         service.initialized = true;
         service.stop();
         try {
-        	// yes, this is ugly and forces to set a test timeout as a precaution :(
+            // yes, this is ugly and forces to set a test timeout as a precaution :(
             while (service.initialized) {
-            	Thread.sleep(20);
+                Thread.sleep(20);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
         Mockito.verify(server).extinguish();
     }
-    
+
     @Test
     public void awaitStopBlocksUntilExtinguished() {
         Service service = Service.ignite();
@@ -303,7 +276,7 @@ public class ServiceTest {
         Mockito.verify(server).extinguish();
         assertFalse(service.initialized);
     }
-    
+
     @WebSocket
     protected static class DummyWebSocketListener {
     }

@@ -1,21 +1,20 @@
 package spark.servlet;
 
-import java.util.concurrent.CountDownLatch;
-
+import org.eclipse.jetty.ee10.webapp.WebAppContext;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import spark.Spark;
 import spark.util.SparkTestUtil;
 import spark.util.SparkTestUtil.UrlResponse;
+
+import java.util.concurrent.CountDownLatch;
 
 public class ServletTest {
 
@@ -43,9 +42,9 @@ public class ServletTest {
 
         // Set some timeout options to make debugging easier.
         connector.setIdleTimeout(1000 * 60 * 60);
-        connector.setSoLingerTime(-1);
+//        connector.setSoLingerTime(-1);
         connector.setPort(PORT);
-        server.setConnectors(new Connector[] {connector});
+        server.setConnectors(new Connector[]{connector});
 
         WebAppContext bb = new WebAppContext();
         bb.setServer(server);

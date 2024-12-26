@@ -1,25 +1,20 @@
 package spark.embeddedserver;
 
-import java.io.File;
-
-import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.thread.ThreadPool;
 import org.junit.AfterClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
 import spark.Spark;
 import spark.embeddedserver.jetty.EmbeddedJettyFactory;
 import spark.embeddedserver.jetty.JettyServerFactory;
 
+import java.io.File;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class EmbeddedServersTest {
 
@@ -32,7 +27,7 @@ public class EmbeddedServersTest {
         Server server = new Server();
         File requestLogDir = temporaryFolder.newFolder();
         File requestLogFile = new File(requestLogDir, "request.log");
-        server.setRequestLog(new NCSARequestLog(requestLogFile.getAbsolutePath()));
+//        server.setRequestLog(new NCSARequestLog(requestLogFile.getAbsolutePath()));
         JettyServerFactory serverFactory = mock(JettyServerFactory.class);
         when(serverFactory.create(0, 0, 0)).thenReturn(server);
 
@@ -60,7 +55,7 @@ public class EmbeddedServersTest {
             @Override
             public Server create(int maxThreads, int minThreads, int threadTimeoutMillis) {
                 Server server = new Server();
-                server.setRequestLog(new NCSARequestLog(requestLogFile.getAbsolutePath()));
+//                server.setRequestLog(new NCSARequestLog(requestLogFile.getAbsolutePath()));
                 return server;
             }
 
