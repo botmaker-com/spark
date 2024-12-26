@@ -16,10 +16,7 @@
  */
 package spark.embeddedserver.jetty;
 
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.util.thread.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +25,7 @@ import spark.ssl.SslStores;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Spark server implementation
@@ -80,19 +78,33 @@ public class EmbeddedJettyServer implements EmbeddedServer {
         }
 
         // Create instance of jetty server with either default or supplied queued thread pool
-        if (threadPool == null) {
-            server = serverFactory.create(maxThreads, minThreads, threadIdleTimeoutMillis);
-        } else {
-            server = serverFactory.create(threadPool);
-        }
+//        if (threadPool == null) {
+        server = serverFactory.create(600, 100, 120_000);
+        server.setAttribute("org.eclipse.jetty.server.Request.maxFormContentSize", 1024 * 1024 * 12);
 
-        ServerConnector connector;
+        final HttpConfiguration httpConfig = new HttpConfiguration();
+        httpConfig.setSendServerVersion(false);
+        httpConfig.setSendXPoweredBy(false);
+        httpConfig.addCustomizer(new ForwardedRequestCustomizer());
+        final HttpConnectionFactory httpConnectionFactory = new HttpConnectionFactory(httpConfig);
 
-        if (sslStores == null) {
-            connector = SocketConnectorFactory.createSocketConnector(server, host, port, trustForwardHeaders);
-        } else {
-            connector = SocketConnectorFactory.createSecureSocketConnector(server, host, port, sslStores, trustForwardHeaders);
-        }
+        final ServerConnector connector = new ServerConnector(server, httpConnectionFactory);
+        connector.setIdleTimeout(TimeUnit.HOURS.toMillis(1));
+        connector.setHost(host);
+        connector.setPort(port);
+
+
+//        } else {
+//            server = serverFactory.create(threadPool);
+//        }
+
+//        ServerConnector connector;
+
+//        if (sslStores == null) {
+//            connector = SocketConnectorFactory.createSocketConnector(server, host, port, trustForwardHeaders);
+//        } else {
+//            connector = SocketConnectorFactory.createSecureSocketConnector(server, host, port, sslStores, trustForwardHeaders);
+//        }
 
         Connector previousConnectors[] = server.getConnectors();
         server = connector.getServer();

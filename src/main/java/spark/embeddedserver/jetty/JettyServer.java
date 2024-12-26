@@ -51,6 +51,7 @@ class JettyServer implements JettyServerFactory {
 
     /**
      * Creates a Jetty server with supplied thread pool
+     *
      * @param threadPool thread pool
      * @return a new jetty server instance
      */
